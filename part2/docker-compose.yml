@@ -1,0 +1,37 @@
+services:
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      # Named volume keeps data between container restarts.
+      # Without this, the database is wiped every time you run docker compose down.
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      # Service names ("mongodb", "redis") act as hostnames inside Docker's network.
+      - MONGO_URI=mongodb://mongodb:27017/library
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
